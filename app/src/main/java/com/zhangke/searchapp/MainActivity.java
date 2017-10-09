@@ -102,7 +102,7 @@ public class MainActivity extends AppCompatActivity {
             }
         });
 
-        recyclerView.setHasFixedSize(true);
+//        recyclerView.setHasFixedSize(true);
 
         appInfoDao = new AppInfoDao(this);
         getAppList(true);
@@ -117,6 +117,8 @@ public class MainActivity extends AppCompatActivity {
         downloadDialog = new ProgressDialog(this);
         downloadDialog.setCancelable(false);
         downloadDialog.setProgressStyle(ProgressDialog.STYLE_HORIZONTAL);
+
+        checkAppVersion();
     }
 
     private void getAppList(final boolean useCache) {
@@ -169,11 +171,15 @@ public class MainActivity extends AppCompatActivity {
         isSingleShow = !isSingleShow;
         imgShowType.setImageDrawable(getResources().getDrawable(isSingleShow ? R.mipmap.single : R.mipmap.double_show));
         adapter.setSingleShow(isSingleShow);
+        listData.clear();
         if (isSingleShow) {
             recyclerView.setLayoutManager(linearLayoutManager);
         } else {
             recyclerView.setLayoutManager(gridLayoutManager);
         }
+        adapter.notifyDataSetChanged();
+        listData.addAll(appOriginList);
+        adapter.notifyDataSetChanged();
     }
 
     @OnClick(R.id.search_view)
@@ -199,7 +205,7 @@ public class MainActivity extends AppCompatActivity {
                                 int version = jsonObject.getInt("result");
                                 PackageManager manager = MainActivity.this.getPackageManager();
                                 PackageInfo info = manager.getPackageInfo(MainActivity.this.getPackageName(), 0);
-                                if (version < info.versionCode) {
+                                if (version > info.versionCode) {
                                     showUpdateDialog(jsonObject.getString("apkUrl"));
                                 }
                             } catch(PackageManager.NameNotFoundException e){
@@ -227,12 +233,7 @@ public class MainActivity extends AppCompatActivity {
                 downloadApk(url);
             }
         });
-        builder.setNegativeButton("暂不更新", new DialogInterface.OnClickListener() {
-            @Override
-            public void onClick(DialogInterface dialog, int which) {
-                MainActivity.this.finish();
-            }
-        });
+        builder.setNegativeButton("暂不更新", null);
         updateDialog = builder.create();
         updateDialog.setCanceledOnTouchOutside(false);
         updateDialog.show();

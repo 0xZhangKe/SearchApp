@@ -5,6 +5,9 @@ import android.app.ProgressDialog;
 import android.content.Intent;
 import android.net.Uri;
 import android.os.AsyncTask;
+import android.os.Build;
+import android.support.v4.BuildConfig;
+import android.support.v4.content.FileProvider;
 
 import java.io.File;
 import java.io.FileOutputStream;
@@ -91,10 +94,15 @@ public class DownloadAsyncTask  extends AsyncTask<Integer, Integer, String> {
         super.onPostExecute(s);
         progressDialog.cancel();
         Intent intent = new Intent(Intent.ACTION_VIEW);
-        intent.setFlags(Intent.FLAG_ACTIVITY_NEW_TASK);
-        intent.setDataAndType(Uri.fromFile(
-                new File(filePath)),
-                "application/vnd.android.package-archive");
+        //判断是否是AndroidN以及更高的版本
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.N) {
+            intent.setFlags(Intent.FLAG_GRANT_READ_URI_PERMISSION);
+            Uri contentUri = FileProvider.getUriForFile(activity, BuildConfig.APPLICATION_ID + ".fileProvider", new File(filePath));
+            intent.setDataAndType(contentUri, "application/vnd.android.package-archive");
+        } else {
+            intent.setFlags(Intent.FLAG_ACTIVITY_NEW_TASK);
+            intent.setDataAndType(Uri.fromFile(new File(filePath)), "application/vnd.android.package-archive");
+        }
         activity.startActivity(intent);
         activity.finish();
     }

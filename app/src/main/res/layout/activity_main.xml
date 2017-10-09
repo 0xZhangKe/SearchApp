@@ -18,7 +18,7 @@
             android:layout_width="30dp"
             android:layout_height="30dp"
             android:layout_gravity="right|center_vertical"
-            android:paddingRight="5dp"
+            android:paddingRight="10dp"
             android:scaleType="centerInside"
             android:transitionName="search"
             android:src="@mipmap/search" />
@@ -56,7 +56,7 @@
             android:padding="3dp"
             android:paddingRight="10dp"
             android:src="@mipmap/single"
-            android:visibility="gone" />
+            android:visibility="visible" />
 
     </FrameLayout>
 
