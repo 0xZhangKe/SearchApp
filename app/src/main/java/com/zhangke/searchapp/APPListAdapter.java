@@ -6,8 +6,9 @@ import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
 import android.widget.ImageView;
-import android.widget.ListView;
 import android.widget.TextView;
+
+import com.zhangke.searchapp.model.AppInfo;
 
 import java.util.List;
 
@@ -46,9 +47,9 @@ public class APPListAdapter extends RecyclerView.Adapter<APPListAdapter.AppInfoV
     @Override
     public void onBindViewHolder(AppInfoViewHolder holder, int position) {
         AppInfo info = listData.get(position);
-        holder.imgIcon.setImageDrawable(info.appIcon);
         holder.tvDesc.setText(info.packageName);
         holder.tvName.setText(info.appName);
+        holder.imgIcon.setImageDrawable(info.appIcon);
     }
 
     @Override

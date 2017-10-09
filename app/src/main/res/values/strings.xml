@@ -1,3 +1,9 @@
 <resources>
     <string name="app_name">SearchAPP</string>
+
+
+    <string name="json_error">网络数据异常</string>
+    <string name="internet_error">网络连接错误</string>
+    <string name="time_out_error">连接超时</string>
+    <string name="unkonw_error">未知错误</string>
 </resources>

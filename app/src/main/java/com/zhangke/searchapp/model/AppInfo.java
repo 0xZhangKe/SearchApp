@@ -1,4 +1,4 @@
-package com.zhangke.searchapp;
+package com.zhangke.searchapp.model;
 
 import android.graphics.drawable.Drawable;
 

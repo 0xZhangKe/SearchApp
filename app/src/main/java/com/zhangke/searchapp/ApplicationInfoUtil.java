@@ -8,6 +8,8 @@ import android.content.pm.PackageInfo;
 import android.content.pm.PackageManager;
 import android.content.pm.ResolveInfo;
 
+import com.zhangke.searchapp.model.AppInfo;
+
 import java.util.ArrayList;
 import java.util.List;
 
@@ -74,8 +76,7 @@ public class ApplicationInfoUtil {
             tmpInfo.packageName = packageInfo.packageName;
             tmpInfo.versionName = packageInfo.versionName;
             tmpInfo.versionCode = packageInfo.versionCode;
-            tmpInfo.appIcon = packageInfo.applicationInfo.loadIcon(context
-                    .getPackageManager());
+            tmpInfo.appIcon = packageInfo.applicationInfo.loadIcon(context.getPackageManager());
             switch (type) {
                 case NONSYSTEM_APP:
                     if (!isSystemAPP(packageInfo)) {
