@@ -7,8 +7,10 @@ import android.content.pm.ApplicationInfo;
 import android.content.pm.PackageInfo;
 import android.content.pm.PackageManager;
 import android.content.pm.ResolveInfo;
+import android.text.TextUtils;
 
 import com.zhangke.searchapp.model.AppInfo;
+import com.zhangke.searchapp.utils.HanziToPinyin;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -93,6 +95,18 @@ public class ApplicationInfoUtil {
                     break;
             }
 
+            ArrayList<HanziToPinyin.Token> sort = HanziToPinyin.getInstance().get(tmpInfo.appName);
+            if (sort == null || sort.isEmpty()) {
+                tmpInfo.sortTarget = tmpInfo.appName;
+            } else {
+                StringBuilder sbSort = new StringBuilder();
+                for (HanziToPinyin.Token token : sort) {
+                    if (!TextUtils.isEmpty(token.target)) {
+                        sbSort.append(token.target.substring(0, 1));
+                    }
+                }
+                tmpInfo.sortTarget = sbSort.toString();
+            }
         }
     }
 

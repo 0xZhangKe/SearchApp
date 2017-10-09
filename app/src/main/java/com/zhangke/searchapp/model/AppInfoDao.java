@@ -6,8 +6,12 @@ import android.content.pm.PackageManager;
 import android.database.Cursor;
 import android.database.SQLException;
 import android.database.sqlite.SQLiteDatabase;
+import android.text.TextUtils;
 import android.util.Log;
 
+import com.zhangke.searchapp.utils.HanziToPinyin;
+
+import java.lang.annotation.Target;
 import java.util.ArrayList;
 import java.util.List;
 
@@ -36,8 +40,8 @@ public class AppInfoDao implements IAppInfoDB {
         try {
             for (AppInfo entity : appList) {
                 db.execSQL("INSERT INTO " + APP_LIST_TABLE_NAME +
-                        " (" + APP_NAME + ", " + PACKAGE_NAME + ", " + VERSION_CODE + ", " + VERSION_NAME + ") VALUES " +
-                        "('" + entity.appName + "', '" + entity.packageName + "', '" + entity.versionCode + "', '" + entity.versionName + "')");
+                        " (" + APP_NAME + ", " + PIN_YIN + ", " + PACKAGE_NAME + ", " + VERSION_CODE + ", " + VERSION_NAME + ") VALUES " +
+                        "('" + entity.appName + "', '" + entity.sortTarget + "', '" + entity.packageName + "', '" + entity.versionCode + "', '" + entity.versionName + "')");
             }
         } catch (SQLException e) {
             e.printStackTrace();
@@ -55,7 +59,7 @@ public class AppInfoDao implements IAppInfoDB {
         List<AppInfo> list = new ArrayList<>();
         SQLiteDatabase db = appInfoDBHelper.getWritableDatabase();
         try {
-            Cursor cursor = db.rawQuery("SELECT " + APP_NAME + ", " + PACKAGE_NAME + ", " +
+            Cursor cursor = db.rawQuery("SELECT " + APP_NAME + ", " + PIN_YIN + ", " + PACKAGE_NAME + ", " +
                     VERSION_CODE + ", " + VERSION_NAME + " FROM " + APP_LIST_TABLE_NAME, null);
             if (cursor.getCount() > 0) {
                 while (cursor.moveToNext()) {
@@ -102,8 +106,20 @@ public class AppInfoDao implements IAppInfoDB {
         try {
             ApplicationInfo info = packageManager.getApplicationInfo(entity.packageName, PackageManager.GET_ACTIVITIES);
             entity.appIcon = info.loadIcon(packageManager);
-        }catch(PackageManager.NameNotFoundException e){
+        } catch (PackageManager.NameNotFoundException e) {
             e.printStackTrace();
+        }
+        ArrayList<HanziToPinyin.Token> sort = HanziToPinyin.getInstance().get(entity.appName);
+        if (sort == null || sort.isEmpty()) {
+            entity.sortTarget = entity.appName;
+        } else {
+            StringBuilder sbSort = new StringBuilder();
+            for (HanziToPinyin.Token token : sort) {
+                if (!TextUtils.isEmpty(token.target)) {
+                    sbSort.append(token.target.substring(0, 1));
+                }
+            }
+            entity.sortTarget = sbSort.toString();
         }
         return entity;
     }

@@ -1,5 +1,6 @@
 package com.zhangke.searchapp;
 
+import android.animation.ObjectAnimator;
 import android.app.ProgressDialog;
 import android.content.DialogInterface;
 import android.content.Intent;
@@ -12,17 +13,15 @@ import android.support.v4.app.ActivityOptionsCompat;
 import android.support.v4.widget.SwipeRefreshLayout;
 import android.support.v7.app.AlertDialog;
 import android.support.v7.app.AppCompatActivity;
+import android.support.v7.widget.CardView;
 import android.support.v7.widget.GridLayoutManager;
 import android.support.v7.widget.LinearLayoutManager;
 import android.support.v7.widget.RecyclerView;
-import android.support.v7.widget.SearchView;
 import android.support.v7.widget.Toolbar;
-import android.text.Spannable;
-import android.text.SpannableString;
 import android.text.TextUtils;
-import android.text.style.ForegroundColorSpan;
 import android.util.Log;
 import android.view.View;
+import android.view.animation.TranslateAnimation;
 import android.widget.ImageView;
 import android.widget.ProgressBar;
 import android.widget.TextView;
@@ -36,6 +35,7 @@ import org.json.JSONException;
 import org.json.JSONObject;
 
 import java.util.ArrayList;
+import java.util.Collections;
 import java.util.List;
 
 import butterknife.BindView;
@@ -60,6 +60,8 @@ public class MainActivity extends AppCompatActivity {
     ProgressBar progress;
 
     public static List<AppInfo> appOriginList = new ArrayList<>();
+    @BindView(R.id.card_title_view)
+    CardView cardTitleView;
 
     private List<AppInfo> listData = new ArrayList<>();
     private APPListAdapter adapter;
@@ -119,6 +121,26 @@ public class MainActivity extends AppCompatActivity {
         downloadDialog.setProgressStyle(ProgressDialog.STYLE_HORIZONTAL);
 
         checkAppVersion();
+
+//        recyclerView.setOnFlingListener(new RecyclerView.OnFlingListener() {
+//            @Override
+//            public boolean onFling(int velocityX, int velocityY) {
+//                if(velocityY < 0){
+//                    cardTitleView.setVisibility(View.VISIBLE);
+//                    ObjectAnimator
+//                            .ofFloat(cardTitleView, "translationY", -cardTitleView.getHeight(), 0.0F)
+//                            .setDuration(500)
+//                            .start();
+//                }else{
+//                    cardTitleView.setVisibility(View.GONE);
+//                    ObjectAnimator
+//                            .ofFloat(cardTitleView, "translationY", 0.0F, -cardTitleView.getHeight())//
+//                            .setDuration(500)
+//                            .start();
+//                }
+//                return false;
+//            }
+//        });
     }
 
     private void getAppList(final boolean useCache) {
@@ -134,7 +156,7 @@ public class MainActivity extends AppCompatActivity {
             listData.addAll(appOriginList);
             adapter.notifyDataSetChanged();
             tvAppNum.setText("APP 数：" + appOriginList.size());
-        }else{
+        } else {
             swipeRefresh.setRefreshing(true);
         }
         new Thread(new Runnable() {
@@ -144,6 +166,7 @@ public class MainActivity extends AppCompatActivity {
                     appOriginList.clear();
                 }
                 appOriginList.addAll(ApplicationInfoUtil.getAllNoSystemProgramInfo(MainActivity.this));
+                Collections.sort(appOriginList);
                 if (listData != null && !listData.isEmpty()) {
                     listData.clear();
                 }
@@ -155,7 +178,7 @@ public class MainActivity extends AppCompatActivity {
                         tvAppNum.setText("APP 数：" + listData.size());
                         if (useCache) {
                             progress.setVisibility(View.GONE);
-                        }else{
+                        } else {
                             swipeRefresh.setRefreshing(false);
                         }
                     }
@@ -171,36 +194,34 @@ public class MainActivity extends AppCompatActivity {
         isSingleShow = !isSingleShow;
         imgShowType.setImageDrawable(getResources().getDrawable(isSingleShow ? R.mipmap.single : R.mipmap.double_show));
         adapter.setSingleShow(isSingleShow);
-        listData.clear();
         if (isSingleShow) {
             recyclerView.setLayoutManager(linearLayoutManager);
         } else {
             recyclerView.setLayoutManager(gridLayoutManager);
         }
-        adapter.notifyDataSetChanged();
-        listData.addAll(appOriginList);
-        adapter.notifyDataSetChanged();
+        recyclerView.setAdapter(null);
+        recyclerView.setAdapter(adapter);
     }
 
     @OnClick(R.id.search_view)
-    public void openSearchActivity(View view){
+    public void openSearchActivity(View view) {
         Intent intent = new Intent(this, SearchActivity.class);
-        if(Build.VERSION.SDK_INT > 20){
+        if (Build.VERSION.SDK_INT > 20) {
             ActivityOptionsCompat compat = ActivityOptionsCompat.makeSceneTransitionAnimation(this, view, "search");
             ActivityCompat.startActivity(this, intent, compat.toBundle());
-        }else{
+        } else {
             startActivity(intent);
         }
     }
 
-    private void checkAppVersion(){
-        String url = "http://otp9vas7i.bkt.clouddn.com/SearchAppVersion.txt";
+    private void checkAppVersion() {
+        String url = "http://otp9vas7i.bkt.clouddn.com/AppVersion.txt";
         HttpUtil.getRequest(url,
                 new HttpUtil.OnDataCallbackListener() {
                     @Override
                     public void onSuccess(String data) {
-                        if(!TextUtils.isEmpty(data)){
-                            try{
+                        if (!TextUtils.isEmpty(data)) {
+                            try {
                                 JSONObject jsonObject = new JSONObject(data);
                                 int version = jsonObject.getInt("result");
                                 PackageManager manager = MainActivity.this.getPackageManager();
@@ -208,9 +229,9 @@ public class MainActivity extends AppCompatActivity {
                                 if (version > info.versionCode) {
                                     showUpdateDialog(jsonObject.getString("apkUrl"));
                                 }
-                            } catch(PackageManager.NameNotFoundException e){
+                            } catch (PackageManager.NameNotFoundException e) {
                                 e.printStackTrace();
-                            } catch(JSONException e){
+                            } catch (JSONException e) {
                                 e.printStackTrace();
                             }
                         }

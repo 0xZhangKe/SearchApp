@@ -9,7 +9,7 @@ import android.database.sqlite.SQLiteOpenHelper;
  * Created by 张可 on 2017/10/9.
  */
 
-public class AppInfoDBHelper extends SQLiteOpenHelper implements IAppInfoDB{
+public class AppInfoDBHelper extends SQLiteOpenHelper implements IAppInfoDB {
 
     public AppInfoDBHelper(Context context) {
         super(context, DB_NAME, null, DB_VERSION);
@@ -22,7 +22,8 @@ public class AppInfoDBHelper extends SQLiteOpenHelper implements IAppInfoDB{
                 APP_NAME + " text, " +
                 PACKAGE_NAME + " text, " +
                 VERSION_CODE + " text, " +
-                VERSION_NAME + " text)";
+                VERSION_NAME + " text, " +
+                PIN_YIN + " text)";
         db.execSQL(sql);
     }
 

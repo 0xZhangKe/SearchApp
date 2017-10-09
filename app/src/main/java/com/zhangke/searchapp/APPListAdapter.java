@@ -80,6 +80,29 @@ public class APPListAdapter extends RecyclerView.Adapter<APPListAdapter.AppInfoV
         }
     }
 
+    class AppInfoViewGridHolder extends RecyclerView.ViewHolder {
+
+        @BindView(R.id.img_icon)
+        ImageView imgIcon;
+        @BindView(R.id.tv_name)
+        TextView tvName;
+        @BindView(R.id.tv_desc)
+        TextView tvDesc;
+
+        public AppInfoViewGridHolder(View itemView) {
+            super(itemView);
+            ButterKnife.bind(this, itemView);
+            if(onItemClickListener != null){
+                itemView.setOnClickListener(new View.OnClickListener() {
+                    @Override
+                    public void onClick(View v) {
+                        onItemClickListener.onItemClick(getAdapterPosition());
+                    }
+                });
+            }
+        }
+    }
+
     public void setSingleShow(boolean singleShow) {
         isSingleShow = singleShow;
     }

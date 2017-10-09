@@ -10,6 +10,7 @@ import android.text.TextUtils;
 import android.text.TextWatcher;
 import android.widget.EditText;
 import android.widget.ImageView;
+import android.widget.LinearLayout;
 
 import com.zhangke.searchapp.model.AppInfo;
 
@@ -37,6 +38,8 @@ public class SearchActivity extends AppCompatActivity {
     EditText etSearch;
     @BindView(R.id.img_clear)
     ImageView imgClear;
+    @BindView(R.id.ll_empty)
+    LinearLayout llEmpty;
 
     private List<AppInfo> listData = new ArrayList<>();
     private APPListAdapter adapter;
@@ -45,7 +48,6 @@ public class SearchActivity extends AppCompatActivity {
     @Override
     protected void onCreate(@Nullable Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
-
         setContentView(R.layout.activity_search);
         ButterKnife.bind(this);
 
@@ -53,8 +55,6 @@ public class SearchActivity extends AppCompatActivity {
         recyclerView.setLayoutManager(new LinearLayoutManager(this));
         recyclerView.setAdapter(adapter);
 
-        listData.clear();
-        listData.addAll(MainActivity.appOriginList);
         appClickPresenter = new AppClickPresenter(this);
 
         etSearch.addTextChangedListener(new TextWatcher() {
@@ -71,7 +71,8 @@ public class SearchActivity extends AppCompatActivity {
                 if (TextUtils.isEmpty(s)) {
                     imgClear.setVisibility(GONE);
                     listData.clear();
-                    listData.addAll(MainActivity.appOriginList);
+                    recyclerView.setVisibility(GONE);
+                    llEmpty.setVisibility(VISIBLE);
                 } else {
                     imgClear.setVisibility(VISIBLE);
                     listData.clear();
@@ -82,6 +83,13 @@ public class SearchActivity extends AppCompatActivity {
                         }
                     }
                     adapter.notifyDataSetChanged();
+                    if(listData.isEmpty()){
+                        recyclerView.setVisibility(GONE);
+                        llEmpty.setVisibility(VISIBLE);
+                    }else{
+                        recyclerView.setVisibility(VISIBLE);
+                        llEmpty.setVisibility(GONE);
+                    }
                 }
             }
         });

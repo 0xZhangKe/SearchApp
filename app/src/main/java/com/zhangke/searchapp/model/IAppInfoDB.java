@@ -14,6 +14,7 @@ public interface IAppInfoDB {
     String PACKAGE_NAME = "packageName";
     String VERSION_NAME = "versionName";
     String VERSION_CODE = "versionCode";
+    String PIN_YIN = "pinYin";
 
 
 }

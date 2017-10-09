@@ -97,7 +97,7 @@ public class DownloadAsyncTask  extends AsyncTask<Integer, Integer, String> {
         //判断是否是AndroidN以及更高的版本
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.N) {
             intent.setFlags(Intent.FLAG_GRANT_READ_URI_PERMISSION);
-            Uri contentUri = FileProvider.getUriForFile(activity, BuildConfig.APPLICATION_ID + ".fileProvider", new File(filePath));
+            Uri contentUri = FileProvider.getUriForFile(activity, "com.zhangke.searchapp.fileProvider", new File(filePath));
             intent.setDataAndType(contentUri, "application/vnd.android.package-archive");
         } else {
             intent.setFlags(Intent.FLAG_ACTIVITY_NEW_TASK);
