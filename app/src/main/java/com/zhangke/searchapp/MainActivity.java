@@ -6,8 +6,11 @@ import android.content.DialogInterface;
 import android.content.Intent;
 import android.content.pm.PackageInfo;
 import android.content.pm.PackageManager;
+import android.graphics.drawable.BitmapDrawable;
+import android.graphics.drawable.ColorDrawable;
 import android.os.Build;
 import android.os.Bundle;
+import android.support.design.widget.FloatingActionButton;
 import android.support.v4.app.ActivityCompat;
 import android.support.v4.app.ActivityOptionsCompat;
 import android.support.v4.widget.SwipeRefreshLayout;
@@ -20,9 +23,13 @@ import android.support.v7.widget.RecyclerView;
 import android.support.v7.widget.Toolbar;
 import android.text.TextUtils;
 import android.util.Log;
+import android.view.Gravity;
+import android.view.KeyEvent;
+import android.view.LayoutInflater;
 import android.view.View;
-import android.view.animation.TranslateAnimation;
+import android.view.ViewGroup;
 import android.widget.ImageView;
+import android.widget.PopupWindow;
 import android.widget.ProgressBar;
 import android.widget.TextView;
 
@@ -30,6 +37,7 @@ import com.zhangke.searchapp.model.AppInfo;
 import com.zhangke.searchapp.model.AppInfoDao;
 import com.zhangke.searchapp.utils.DownloadAsyncTask;
 import com.zhangke.searchapp.utils.HttpUtil;
+import com.zhangke.searchapp.utils.UiUtils;
 
 import org.json.JSONException;
 import org.json.JSONObject;
@@ -58,10 +66,12 @@ public class MainActivity extends AppCompatActivity {
     SwipeRefreshLayout swipeRefresh;
     @BindView(R.id.progress)
     ProgressBar progress;
-
-    public static List<AppInfo> appOriginList = new ArrayList<>();
     @BindView(R.id.card_title_view)
     CardView cardTitleView;
+    @BindView(R.id.floating_btn)
+    FloatingActionButton floatingBtn;
+
+    public static List<AppInfo> appOriginList = new ArrayList<>();
 
     private List<AppInfo> listData = new ArrayList<>();
     private APPListAdapter adapter;
@@ -76,6 +86,13 @@ public class MainActivity extends AppCompatActivity {
     private AlertDialog updateDialog;
 
     private AppClickPresenter appClickPresenter;
+
+    private PopupWindow popupWindow;
+    /**
+     * FloatingButton 是否为打开状态
+     */
+    private boolean floatingBtnIsOpen = false;
+    private int popupHeight = 0;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -121,26 +138,7 @@ public class MainActivity extends AppCompatActivity {
         downloadDialog.setProgressStyle(ProgressDialog.STYLE_HORIZONTAL);
 
         checkAppVersion();
-
-//        recyclerView.setOnFlingListener(new RecyclerView.OnFlingListener() {
-//            @Override
-//            public boolean onFling(int velocityX, int velocityY) {
-//                if(velocityY < 0){
-//                    cardTitleView.setVisibility(View.VISIBLE);
-//                    ObjectAnimator
-//                            .ofFloat(cardTitleView, "translationY", -cardTitleView.getHeight(), 0.0F)
-//                            .setDuration(500)
-//                            .start();
-//                }else{
-//                    cardTitleView.setVisibility(View.GONE);
-//                    ObjectAnimator
-//                            .ofFloat(cardTitleView, "translationY", 0.0F, -cardTitleView.getHeight())//
-//                            .setDuration(500)
-//                            .start();
-//                }
-//                return false;
-//            }
-//        });
+        popupHeight = UiUtils.dip2px(this, 150);
     }
 
     private void getAppList(final boolean useCache) {
@@ -276,5 +274,72 @@ public class MainActivity extends AppCompatActivity {
             e.printStackTrace();
         }
         return versionName;
+    }
+
+    @OnClick(R.id.floating_btn)
+    public void onFloatingClick(View view) {
+        if (floatingBtnIsOpen) {
+            closeFloatingMenu();
+        } else {
+            openFloatingMenu();
+        }
+    }
+
+    private void openFloatingMenu() {
+        ObjectAnimator openAnim = ObjectAnimator.ofFloat(floatingBtn, "rotation", 0, -155.0F, -135.0F);
+        openAnim.setDuration(500);
+        openAnim.start();
+
+        if (popupWindow == null) {
+            View popupView = LayoutInflater.from(this).inflate(R.layout.view_popup_window, null);
+            popupWindow = new PopupWindow(popupView,
+                    ViewGroup.LayoutParams.WRAP_CONTENT,
+                    ViewGroup.LayoutParams.WRAP_CONTENT,
+                    true);
+            ViewGroup llClearProcess = (ViewGroup) popupView.findViewById(R.id.ll_clear);
+            ViewGroup llTODO = (ViewGroup) popupView.findViewById(R.id.ll_todo);
+            llClearProcess.setOnClickListener(new View.OnClickListener() {
+                @Override
+                public void onClick(View v) {
+                    popupWindow.dismiss();
+                }
+            });
+            llTODO.setOnClickListener(new View.OnClickListener() {
+                @Override
+                public void onClick(View v) {
+                    popupWindow.dismiss();
+                }
+            });
+            popupView.setFocusable(false);
+            popupWindow.setBackgroundDrawable(new ColorDrawable());
+            popupWindow.setContentView(popupView);
+            popupWindow.setOnDismissListener(new PopupWindow.OnDismissListener() {
+                @Override
+                public void onDismiss() {
+                    closeFloatingMenu();
+                    floatingBtnIsOpen = false;
+                }
+            });
+        }
+        popupWindow.showAsDropDown(floatingBtn, 0, -popupHeight - floatingBtn.getHeight() / 2, Gravity.TOP);
+        floatingBtnIsOpen = true;
+    }
+
+    private void closeFloatingMenu() {
+        ObjectAnimator closeAnim = ObjectAnimator.ofFloat(floatingBtn, "rotation", -135F, 20.0F, 0);
+        closeAnim.setDuration(500);
+        closeAnim.start();
+
+        if (popupWindow != null && popupWindow.isShowing()) {
+            popupWindow.dismiss();
+        }
+    }
+
+    @Override
+    public boolean onKeyDown(int keyCode, KeyEvent event) {
+        if (keyCode == KeyEvent.KEYCODE_BACK && null != popupWindow && popupWindow.isShowing()) {
+            popupWindow.dismiss();
+        }
+        return super.onKeyDown(keyCode, event);
     }
 }

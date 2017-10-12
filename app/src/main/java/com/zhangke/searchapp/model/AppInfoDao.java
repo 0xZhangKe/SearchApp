@@ -95,31 +95,34 @@ public class AppInfoDao implements IAppInfoDB {
 
     private AppInfo parseNotify(Cursor cursor) {
         AppInfo entity = new AppInfo();
-        entity.appName = cursor.getString(0);
-        entity.packageName = cursor.getString(1);
         try {
-            entity.versionCode = Integer.valueOf(cursor.getString(2));
+            entity.appName = cursor.getString(0);
+            entity.sortTarget = cursor.getString(1);
+            entity.packageName = cursor.getString(2);
+            entity.versionCode = Integer.valueOf(cursor.getString(3));
+            entity.versionName = cursor.getString(4);
         } catch (Exception e) {
             e.printStackTrace();
         }
-        entity.versionName = cursor.getString(3);
         try {
             ApplicationInfo info = packageManager.getApplicationInfo(entity.packageName, PackageManager.GET_ACTIVITIES);
             entity.appIcon = info.loadIcon(packageManager);
         } catch (PackageManager.NameNotFoundException e) {
             e.printStackTrace();
         }
-        ArrayList<HanziToPinyin.Token> sort = HanziToPinyin.getInstance().get(entity.appName);
-        if (sort == null || sort.isEmpty()) {
-            entity.sortTarget = entity.appName;
-        } else {
-            StringBuilder sbSort = new StringBuilder();
-            for (HanziToPinyin.Token token : sort) {
-                if (!TextUtils.isEmpty(token.target)) {
-                    sbSort.append(token.target.substring(0, 1));
+        if(TextUtils.isEmpty(entity.sortTarget)) {
+            ArrayList<HanziToPinyin.Token> sort = HanziToPinyin.getInstance().get(entity.appName);
+            if (sort == null || sort.isEmpty()) {
+                entity.sortTarget = entity.appName;
+            } else {
+                StringBuilder sbSort = new StringBuilder();
+                for (HanziToPinyin.Token token : sort) {
+                    if (!TextUtils.isEmpty(token.target)) {
+                        sbSort.append(token.target.substring(0, 1));
+                    }
                 }
+                entity.sortTarget = sbSort.toString();
             }
-            entity.sortTarget = sbSort.toString();
         }
         return entity;
     }
