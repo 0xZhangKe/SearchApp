@@ -1,4 +1,4 @@
-package com.zhangke.searchapp;
+package com.zhangke.searchapp.Main;
 
 import android.content.Context;
 import android.support.v7.widget.RecyclerView;
@@ -8,6 +8,7 @@ import android.view.ViewGroup;
 import android.widget.ImageView;
 import android.widget.TextView;
 
+import com.zhangke.searchapp.R;
 import com.zhangke.searchapp.model.AppInfo;
 
 import java.util.List;

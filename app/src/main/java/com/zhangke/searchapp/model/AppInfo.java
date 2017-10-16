@@ -14,6 +14,11 @@ public class AppInfo  implements Comparable<AppInfo>{
     public Drawable appIcon = null; // 应用图标
     public String sortTarget;
 
+    public int pid;
+    public int uid;
+    public String processName;
+
+
     @Override
     public String toString() {
         return appName + " , " + packageName + " ," + versionName + " ," + versionCode;

@@ -1,4 +1,4 @@
-package com.zhangke.searchapp;
+package com.zhangke.searchapp.Main;
 
 import android.animation.ObjectAnimator;
 import android.app.ProgressDialog;
@@ -6,7 +6,6 @@ import android.content.DialogInterface;
 import android.content.Intent;
 import android.content.pm.PackageInfo;
 import android.content.pm.PackageManager;
-import android.graphics.drawable.BitmapDrawable;
 import android.graphics.drawable.ColorDrawable;
 import android.os.Build;
 import android.os.Bundle;
@@ -29,10 +28,14 @@ import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
 import android.widget.ImageView;
+import android.widget.LinearLayout;
 import android.widget.PopupWindow;
 import android.widget.ProgressBar;
 import android.widget.TextView;
 
+import com.zhangke.searchapp.utils.ApplicationInfoUtil;
+import com.zhangke.searchapp.Running.ClearProcessActivity;
+import com.zhangke.searchapp.R;
 import com.zhangke.searchapp.model.AppInfo;
 import com.zhangke.searchapp.model.AppInfoDao;
 import com.zhangke.searchapp.utils.DownloadAsyncTask;
@@ -49,10 +52,18 @@ import java.util.List;
 import butterknife.BindView;
 import butterknife.ButterKnife;
 import butterknife.OnClick;
+import io.reactivex.Observable;
+import io.reactivex.ObservableEmitter;
+import io.reactivex.ObservableOnSubscribe;
+import io.reactivex.Observer;
+import io.reactivex.android.schedulers.AndroidSchedulers;
+import io.reactivex.disposables.Disposable;
+import io.reactivex.schedulers.Schedulers;
 
 public class MainActivity extends AppCompatActivity {
 
     private static final String TAG = "MainActivity";
+    private static final int CUSTOM_VIEW_TAG_KEY = 101;
 
     @BindView(R.id.toolbar)
     Toolbar toolbar;
@@ -70,6 +81,10 @@ public class MainActivity extends AppCompatActivity {
     CardView cardTitleView;
     @BindView(R.id.floating_btn)
     FloatingActionButton floatingBtn;
+    @BindView(R.id.ll_content)
+    LinearLayout llContent;
+    //    @BindView(R.id.img_custom)
+//    ImageView imgCustom;
 
     public static List<AppInfo> appOriginList = new ArrayList<>();
 
@@ -93,6 +108,8 @@ public class MainActivity extends AppCompatActivity {
      */
     private boolean floatingBtnIsOpen = false;
     private int popupHeight = 0;
+
+    private Disposable disposable;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -142,49 +159,71 @@ public class MainActivity extends AppCompatActivity {
     }
 
     private void getAppList(final boolean useCache) {
-        if (appOriginList != null && !appOriginList.isEmpty()) {
-            appOriginList.clear();
-        }
-        if (listData != null && !listData.isEmpty()) {
-            listData.clear();
-        }
         if (useCache) {
             progress.setVisibility(View.VISIBLE);
-            appOriginList.addAll(appInfoDao.readAllData());
-            listData.addAll(appOriginList);
-            adapter.notifyDataSetChanged();
-            tvAppNum.setText("APP 数：" + appOriginList.size());
         } else {
             swipeRefresh.setRefreshing(true);
         }
-        new Thread(new Runnable() {
+        Observable<Integer> refreshObservable = Observable.create(new ObservableOnSubscribe<Integer>() {
             @Override
-            public void run() {
+            public void subscribe(ObservableEmitter<Integer> observableEmitter) throws Exception {
                 if (appOriginList != null && !appOriginList.isEmpty()) {
                     appOriginList.clear();
                 }
-                appOriginList.addAll(ApplicationInfoUtil.getAllNoSystemProgramInfo(MainActivity.this));
+                if (listData != null && !listData.isEmpty()) {
+                    listData.clear();
+                }
+                if (useCache) {
+                    appOriginList.addAll(appInfoDao.readAllData());
+                    listData.addAll(appOriginList);
+                    observableEmitter.onNext(1);
+                    if (appOriginList != null && !appOriginList.isEmpty()) {
+                        appOriginList.clear();
+                    }
+                }
+
+                appOriginList.addAll(ApplicationInfoUtil.getAllProgramInfo(MainActivity.this));
                 Collections.sort(appOriginList);
                 if (listData != null && !listData.isEmpty()) {
                     listData.clear();
                 }
                 listData.addAll(appOriginList);
-                runOnUiThread(new Runnable() {
-                    @Override
-                    public void run() {
-                        adapter.notifyDataSetChanged();
-                        tvAppNum.setText("APP 数：" + listData.size());
-                        if (useCache) {
-                            progress.setVisibility(View.GONE);
-                        } else {
-                            swipeRefresh.setRefreshing(false);
-                        }
-                    }
-                });
+                observableEmitter.onNext(2);
                 appInfoDao.clearAppList();
                 appInfoDao.insertAppList(appOriginList);
+                observableEmitter.onComplete();
             }
-        }).start();
+        });
+        Observer<Integer> observer = new Observer<Integer>() {
+            @Override
+            public void onSubscribe(Disposable disposable) {
+                MainActivity.this.disposable = disposable;
+            }
+
+            @Override
+            public void onNext(Integer position) {
+                adapter.notifyDataSetChanged();
+                tvAppNum.setText("APP 数：" + listData.size());
+                if (position == 2) {
+                    if (useCache) {
+                        progress.setVisibility(View.GONE);
+                    } else {
+                        swipeRefresh.setRefreshing(false);
+                    }
+                }
+            }
+
+            @Override
+            public void onError(Throwable throwable) {
+            }
+
+            @Override
+            public void onComplete() {
+            }
+        };
+        refreshObservable.subscribeOn(Schedulers.newThread())
+                .observeOn(AndroidSchedulers.mainThread())
+                .subscribe(observer);
     }
 
     @OnClick(R.id.img_show_type)
@@ -302,6 +341,8 @@ public class MainActivity extends AppCompatActivity {
                 @Override
                 public void onClick(View v) {
                     popupWindow.dismiss();
+                    Intent intent = new Intent(MainActivity.this, ClearProcessActivity.class);
+                    startActivity(intent);
                 }
             });
             llTODO.setOnClickListener(new View.OnClickListener() {
@@ -318,11 +359,34 @@ public class MainActivity extends AppCompatActivity {
                 public void onDismiss() {
                     closeFloatingMenu();
                     floatingBtnIsOpen = false;
+//                    imgCustom.setVisibility(View.GONE);
                 }
             });
         }
         popupWindow.showAsDropDown(floatingBtn, 0, -popupHeight - floatingBtn.getHeight() / 2, Gravity.TOP);
         floatingBtnIsOpen = true;
+
+        //高斯模糊，看着头晕就删掉了这个功能。
+//        llContent.setDrawingCacheEnabled(true);
+//        Bitmap bitmap = UiUtils.rsBlur(this, llContent.getDrawingCache(), 25);
+//        imgCustom.setImageBitmap(bitmap);
+//        imgCustom.setVisibility(View.VISIBLE);
+//
+//        Observable.create(new ObservableOnSubscribe<Integer>(){
+//            @Override
+//            public void subscribe(ObservableEmitter<Integer> observableEmitter) throws Exception {
+//                Thread.sleep(500);
+//                observableEmitter.onNext(1);
+//                observableEmitter.onComplete();
+//            }
+//        }).subscribeOn(Schedulers.io())
+//        .observeOn(AndroidSchedulers.mainThread())
+//        .subscribe(new Consumer<Integer>() {
+//            @Override
+//            public void accept(Integer integer) throws Exception {
+//                llContent.setDrawingCacheEnabled(false);
+//            }
+//        });
     }
 
     private void closeFloatingMenu() {
@@ -341,5 +405,13 @@ public class MainActivity extends AppCompatActivity {
             popupWindow.dismiss();
         }
         return super.onKeyDown(keyCode, event);
+    }
+
+    @Override
+    protected void onDestroy() {
+        if (disposable != null && !disposable.isDisposed()) {
+            disposable.dispose();
+        }
+        super.onDestroy();
     }
 }

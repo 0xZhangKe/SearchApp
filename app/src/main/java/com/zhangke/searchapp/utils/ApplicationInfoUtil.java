@@ -1,4 +1,4 @@
-package com.zhangke.searchapp;
+package com.zhangke.searchapp.utils;
 
 import android.content.ComponentName;
 import android.content.Context;

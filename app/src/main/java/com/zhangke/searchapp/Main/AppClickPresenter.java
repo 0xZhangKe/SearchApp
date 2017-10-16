@@ -1,4 +1,4 @@
-package com.zhangke.searchapp;
+package com.zhangke.searchapp.Main;
 
 import android.app.Activity;
 import android.content.Intent;
@@ -11,6 +11,7 @@ import android.widget.AdapterView;
 import android.widget.ArrayAdapter;
 import android.widget.ListView;
 
+import com.zhangke.searchapp.utils.ApplicationInfoUtil;
 import com.zhangke.searchapp.model.AppInfo;
 
 import java.util.ArrayList;
