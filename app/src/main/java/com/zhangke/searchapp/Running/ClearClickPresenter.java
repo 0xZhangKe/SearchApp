@@ -1,6 +1,8 @@
 package com.zhangke.searchapp.Running;
 
 import android.app.Activity;
+import android.app.ActivityManager;
+import android.content.Context;
 import android.content.Intent;
 import android.net.Uri;
 import android.provider.Settings;
@@ -31,9 +33,13 @@ public class ClearClickPresenter implements ClearClickContract.Presenter {
 
     private AlertDialog alertDialog;
 
+    private ActivityManager activityManager;
+
     public ClearClickPresenter(ClearClickContract.View view, Activity activity) {
         this.view = view;
         this.activity = activity;
+
+        activityManager = (ActivityManager)activity.getSystemService(Context.ACTIVITY_SERVICE);
     }
 
     @Override
@@ -65,10 +71,13 @@ public class ClearClickPresenter implements ClearClickContract.Presenter {
                     case 1: {
                         if (appInfo.pid != 0) {
                             try {
-                                Runtime.getRuntime().exec("kill -s " + appInfo.pid);
+                                //http://www.cnblogs.com/crazypebble/archive/2011/04/09/2010196.html
+                                Runtime.getRuntime().exec("am force-stop " + appInfo.packageName);
+//                                activityManager.killBackgroundProcesses(appInfo.packageName);
+
                                 UiUtils.showToast(activity, "killed!");
                                 ClearClickPresenter.this.view.refresh();
-                            } catch (IOException e) {
+                            } catch (Exception e) {
                                 UiUtils.showToast(activity, "error: " + e.getMessage());
                             }
                         }
