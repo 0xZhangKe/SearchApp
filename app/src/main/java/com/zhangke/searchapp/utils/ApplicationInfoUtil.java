@@ -8,10 +8,16 @@ import android.content.pm.PackageInfo;
 import android.content.pm.PackageManager;
 import android.content.pm.ResolveInfo;
 import android.text.TextUtils;
+import android.util.Log;
 
 import com.zhangke.searchapp.model.AppInfo;
 import com.zhangke.searchapp.utils.HanziToPinyin;
 
+import java.io.BufferedReader;
+import java.io.DataOutputStream;
+import java.io.File;
+import java.io.IOException;
+import java.io.InputStreamReader;
 import java.util.ArrayList;
 import java.util.List;
 
@@ -23,6 +29,8 @@ public class ApplicationInfoUtil {
     public static final int DEFAULT = 0; // 默认 所有应用
     public static final int SYSTEM_APP = DEFAULT + 1; // 系统应用
     public static final int NONSYSTEM_APP = DEFAULT + 2; // 非系统应用
+
+    private static final String TAG = "ApplicationInfoUtil";
 
     /**
      * 根据包名获取相应的应用信息
@@ -61,8 +69,7 @@ public class ApplicationInfoUtil {
      *
      * @param applist
      * @param context
-     * @param type
-     *            标识符 是否区分系统和非系统应用
+     * @param type    标识符 是否区分系统和非系统应用
      */
     public static void getAllProgramInfo(List<AppInfo> applist,
                                          Context context, int type) {
@@ -186,5 +193,85 @@ public class ApplicationInfoUtil {
             intent.setComponent(cn);
             context.startActivity(intent);
         }
+    }
+
+    /**
+     * 判断手机是否ROOT
+     */
+    public static boolean isRoot() {
+        boolean root = false;
+        try {
+            if ((!new File("/system/bin/su").exists())
+                    && (!new File("/system/xbin/su").exists())) {
+                root = false;
+            } else {
+                root = true;
+            }
+        } catch (Exception e) {
+        }
+        return root;
+    }
+
+    /**
+     * 应用程序运行命令获取 Root权限，设备必须已破解(获得ROOT权限)
+     *
+     * @param command 命令： String apkRoot="chmod 777 "+getPackageCodePath();
+     *                RootCommand(apkRoot);
+     * @return 应用程序是/否获取Root权限
+     */
+    public static boolean RootCommand(String command) {
+        Process process = null;
+        DataOutputStream os = null;
+        try {
+            process = Runtime.getRuntime().exec("su");
+            os = new DataOutputStream(process.getOutputStream());
+            os.writeBytes(command + "\n");
+            os.writeBytes("exit\n");
+            os.flush();
+            process.waitFor();
+        } catch (Exception e) {
+            Log.e("*** DEBUG ***", "ROOT REE" + e.getMessage());
+            return false;
+        } finally {
+            try {
+                if (os != null) {
+                    os.close();
+                }
+                process.destroy();
+            } catch (Exception e) {
+            }
+        }
+        Log.e("*** DEBUG ***", "Root SUC ");
+        return true;
+    }
+
+    /**
+     * 执行 shell 命令
+     *
+     * @param command shell 命令
+     * @return 返回值
+     */
+    public static String execCommand(String command) {
+        String result;
+        try {
+            Runtime runtime = Runtime.getRuntime();
+            Process proc = runtime.exec(command);
+            if (proc.waitFor() != 0) {
+                result = "exit value = " + proc.exitValue();
+                Log.e(TAG, result);
+            }
+            BufferedReader in = new BufferedReader(new InputStreamReader(proc.getInputStream()));
+            StringBuffer stringBuffer = new StringBuffer();
+            String line = null;
+            while ((line = in.readLine()) != null) {
+                stringBuffer.append(line + "-");
+            }
+            result = stringBuffer.toString();
+        } catch (InterruptedException e) {
+            result = "error: " + e.getMessage();
+        } catch (IOException e) {
+            result = "error:" + e.getMessage();
+        }
+        return result;
     }
 }

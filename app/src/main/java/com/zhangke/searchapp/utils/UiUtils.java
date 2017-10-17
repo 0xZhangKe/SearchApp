@@ -22,7 +22,7 @@ public class UiUtils {
      *
      * @param radius 模糊半径
      */
-    public static Bitmap rsBlur(Context context, Bitmap source, int radius){
+    public static Bitmap rsBlur(Context context, Bitmap source, int radius) {
 
         Bitmap inputBmp = source;
         //(1)
@@ -104,10 +104,11 @@ public class UiUtils {
 
 
     private static Toast toast;
+
     public static void showToast(final Context context, final String message) {
-        if(toast==null){
-            toast=Toast.makeText(context,message, Toast.LENGTH_SHORT);
-        }else{
+        if (toast == null) {
+            toast = Toast.makeText(context, message, Toast.LENGTH_SHORT);
+        } else {
             toast.setText(message);
         }
         toast.show();

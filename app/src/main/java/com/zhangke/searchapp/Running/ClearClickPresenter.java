@@ -3,6 +3,7 @@ package com.zhangke.searchapp.Running;
 import android.app.Activity;
 import android.app.ActivityManager;
 import android.content.Context;
+import android.content.DialogInterface;
 import android.content.Intent;
 import android.net.Uri;
 import android.provider.Settings;
@@ -39,7 +40,7 @@ public class ClearClickPresenter implements ClearClickContract.Presenter {
         this.view = view;
         this.activity = activity;
 
-        activityManager = (ActivityManager)activity.getSystemService(Context.ACTIVITY_SERVICE);
+        activityManager = (ActivityManager) activity.getSystemService(Context.ACTIVITY_SERVICE);
     }
 
     @Override
@@ -72,10 +73,14 @@ public class ClearClickPresenter implements ClearClickContract.Presenter {
                         if (appInfo.pid != 0) {
                             try {
                                 //http://www.cnblogs.com/crazypebble/archive/2011/04/09/2010196.html
-                                Runtime.getRuntime().exec("am force-stop " + appInfo.packageName);
+//                                Runtime.getRuntime().exec("am force-stop " + appInfo.packageName);
 //                                activityManager.killBackgroundProcesses(appInfo.packageName);
 
-                                UiUtils.showToast(activity, "killed!");
+                                if(ApplicationInfoUtil.isRoot()){
+                                    UiUtils.showToast(activity, ApplicationInfoUtil.execCommand("kill -9 " + appInfo.pid).toString());
+                                }else{
+                                    showRootDialog();
+                                }
                                 ClearClickPresenter.this.view.refresh();
                             } catch (Exception e) {
                                 UiUtils.showToast(activity, "error: " + e.getMessage());
@@ -94,5 +99,22 @@ public class ClearClickPresenter implements ClearClickContract.Presenter {
         });
         alertDialog = builder.create();
         alertDialog.show();
+    }
+
+    private void showRootDialog() {
+        AlertDialog.Builder builder = new AlertDialog.Builder(activity);
+        builder.setMessage("获取 root 权限可增强清理效果，是否提升至 root 权限？");
+        builder.setNegativeButton("取消", null);
+        builder.setPositiveButton("确定", new DialogInterface.OnClickListener() {
+            @Override
+            public void onClick(DialogInterface dialog, int which) {
+                if (ApplicationInfoUtil.RootCommand("chmod 777 " + activity.getPackageCodePath())) {
+                    UiUtils.showToast(activity, "root 成功");
+                } else {
+                    UiUtils.showToast(activity, "失败");
+                }
+            }
+        });
+        builder.create().show();
     }
 }
