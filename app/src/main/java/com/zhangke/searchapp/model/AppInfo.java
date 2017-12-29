@@ -13,6 +13,7 @@ public class AppInfo  implements Comparable<AppInfo>{
     public int versionCode = 0; // 版本号
     public Drawable appIcon = null; // 应用图标
     public String sortTarget;
+    public boolean isSystemApp = false;
 
     public int pid;
     public int uid;

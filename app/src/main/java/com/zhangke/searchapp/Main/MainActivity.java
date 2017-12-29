@@ -27,10 +27,12 @@ import android.view.KeyEvent;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
+import android.widget.CompoundButton;
 import android.widget.ImageView;
 import android.widget.LinearLayout;
 import android.widget.PopupWindow;
 import android.widget.ProgressBar;
+import android.widget.Switch;
 import android.widget.TextView;
 
 import com.zhangke.searchapp.utils.ApplicationInfoUtil;
@@ -83,6 +85,8 @@ public class MainActivity extends AppCompatActivity {
     FloatingActionButton floatingBtn;
     @BindView(R.id.ll_content)
     LinearLayout llContent;
+    @BindView(R.id.switch_system_app)
+    Switch switchSystemApp;
     //    @BindView(R.id.img_custom)
 //    ImageView imgCustom;
 
@@ -156,6 +160,24 @@ public class MainActivity extends AppCompatActivity {
 
         checkAppVersion();
         popupHeight = UiUtils.dip2px(this, 150);
+
+        switchSystemApp.setOnCheckedChangeListener(new CompoundButton.OnCheckedChangeListener() {
+            @Override
+            public void onCheckedChanged(CompoundButton buttonView, boolean isChecked) {
+                listData.clear();
+                if(isChecked){
+                    listData.addAll(appOriginList);
+                }else{
+                    for(AppInfo item : appOriginList){
+                        if(!item.isSystemApp){
+                            listData.add(item);
+                        }
+                    }
+                }
+                adapter.notifyDataSetChanged();
+                tvAppNum.setText("APP 数：" + listData.size());
+            }
+        });
     }
 
     private void getAppList(final boolean useCache) {
@@ -175,7 +197,15 @@ public class MainActivity extends AppCompatActivity {
                 }
                 if (useCache) {
                     appOriginList.addAll(appInfoDao.readAllData());
-                    listData.addAll(appOriginList);
+                    if(switchSystemApp.isChecked()) {
+                        listData.addAll(appOriginList);
+                    }else{
+                        for(AppInfo item : appOriginList){
+                            if(!item.isSystemApp){
+                                listData.add(item);
+                            }
+                        }
+                    }
                     observableEmitter.onNext(1);
                     if (appOriginList != null && !appOriginList.isEmpty()) {
                         appOriginList.clear();
@@ -187,7 +217,15 @@ public class MainActivity extends AppCompatActivity {
                 if (listData != null && !listData.isEmpty()) {
                     listData.clear();
                 }
-                listData.addAll(appOriginList);
+                if(switchSystemApp.isChecked()) {
+                    listData.addAll(appOriginList);
+                }else{
+                    for(AppInfo item : appOriginList){
+                        if(!item.isSystemApp){
+                            listData.add(item);
+                        }
+                    }
+                }
                 observableEmitter.onNext(2);
                 appInfoDao.clearAppList();
                 appInfoDao.insertAppList(appOriginList);

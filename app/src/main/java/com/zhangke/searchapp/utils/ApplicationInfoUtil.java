@@ -73,7 +73,6 @@ public class ApplicationInfoUtil {
      */
     public static void getAllProgramInfo(List<AppInfo> applist,
                                          Context context, int type) {
-        ArrayList<AppInfo> appList = new ArrayList<AppInfo>(); // 用来存储获取的应用信息数据
         List<PackageInfo> packages = context.getPackageManager()
                 .getInstalledPackages(0);
 
@@ -89,15 +88,18 @@ public class ApplicationInfoUtil {
             switch (type) {
                 case NONSYSTEM_APP:
                     if (!isSystemAPP(packageInfo)) {
+                        tmpInfo.isSystemApp = false;
                         applist.add(tmpInfo);
                     }
                     break;
                 case SYSTEM_APP:
                     if (isSystemAPP(packageInfo)) {
+                        tmpInfo.isSystemApp = true;
                         applist.add(tmpInfo);
                     }
                     break;
                 default:
+                    tmpInfo.isSystemApp = isSystemAPP(packageInfo);
                     applist.add(tmpInfo);
                     break;
             }
